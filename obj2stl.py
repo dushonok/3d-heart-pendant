@@ -72,7 +72,7 @@ def convert(fin, fout, binary=False):
       # face
       # todo: support v/vt/vn instead of just v
       
-      vs = map(lambda s: vertices[int(s)-1], values[:3])
+      vs = map(lambda s: vertices[int(s)-1], values)
       for i in range(1,len(vs)-1):
         v1,v2,v3 = vs[0], vs[i], vs[i+1]
         faces.append((v1,v2,v3))
