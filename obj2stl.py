@@ -15,13 +15,13 @@ def write_face(fout, p1, p2, p3, binary=False):
   if binary:
     fout.write(pack('<12f2x',0,0,0,x1,y1,z1,x2,y2,z2,x3,y3,z3))
   else:
-    fout.writelin("\tfacet normal {0:e} {1:e} {2:e}".format(0, 0, 0))
-    fout.writelin("\t\tfouter loop")
-    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x1, y1, z1))
-    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x2, y2, z2))
-    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x3, y3, z3))
-    fout.writelin("\t\tendloop")
-    fout.writelin("\tendfacet")
+    fout.write("\tfacet normal {0:e} {1:e} {2:e}\n".format(0, 0, 0))
+    fout.write("\t\tfouter loop\n")
+    fout.write("\t\t\tvertex {0:e} {1:e} {2:e}\n".format(x1, y1, z1))
+    fout.write("\t\t\tvertex {0:e} {1:e} {2:e}\n".format(x2, y2, z2))
+    fout.write("\t\t\tvertex {0:e} {1:e} {2:e}\n".format(x3, y3, z3))
+    fout.write("\t\tendloop\n")
+    fout.write("\tendfacet\n")
 
 def write_stl(fout, triangles, binary=False):
   if binary:
@@ -29,16 +29,17 @@ def write_stl(fout, triangles, binary=False):
   else:
     fout.write("solid surface\n")
   
-  for triangle in triangles:
-    write_face(fout, triangle, binary)
+  for v1,v2,v3 in triangles:
+    write_face(fout, v1,v2,v3, binary)
   
   if not binary:
-    fout.writelin("endsolid surface")
+    fout.write("endsolid surface\n")
 
 
 def convert(fin, fout, binary=False):
   name = "surface"
   vertices = []
+  faces = []
   for line in fin.readlines():
     # todo: strip comments
     
@@ -56,7 +57,7 @@ def convert(fin, fout, binary=False):
       pass
     elif linetype == 'v':
       # vertex position
-      vertices.append(values)
+      vertices.append(map(float, values))
       pass
     elif linetype == 'vt':
       # texture coordinate
@@ -69,10 +70,16 @@ def convert(fin, fout, binary=False):
       pass
     elif linetype == 'f':
       # face
-      pass
+      
+      # todo: support v/vt/vn instead of just v
+      # todo: support faces with more than 3 vertices
+      
+      v1,v2,v3 = map(lambda s: vertices[int(s)-1], values[:3])
+      faces.append((v1,v2,v3))
     else:
       print "Unknown linetype %s" % linetype
       sys.exit(1)
+  write_stl(fout, faces, binary)
 
 
 binary = False
