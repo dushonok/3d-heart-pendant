@@ -73,8 +73,8 @@ def convert(fin, fout, binary=False):
       # todo: support v/vt/vn instead of just v
       
       vs = map(lambda s: vertices[int(s)-1], values[:3])
-      for i in range(3,len(vs)+1):
-        v1,v2,v3 = vs[i-3:i]
+      for i in range(1,len(vs)-1):
+        v1,v2,v3 = vs[0], vs[i], vs[i+1]
         faces.append((v1,v2,v3))
     else:
       print "Unknown linetype %s" % linetype
