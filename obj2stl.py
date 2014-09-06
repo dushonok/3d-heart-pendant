@@ -8,6 +8,37 @@ def usage():
   print "Convert a Wavefront .obj file into a ASCII or binary .stl file."
 
 def convert(fin, fout, binary):
+  for line in fin.readlines():
+    # todo: strip comments
+    
+    values = line.split()
+    linetype, values = values[0], values[1:]
+    if linetype == 'o':
+      # object name
+      pass
+    elif linetype == 'g':
+      # group name
+      pass
+    elif linetype == 'v':
+      # vertex position
+      pass
+    elif linetype == 'vt':
+      # texture coordinate
+      pass
+    elif linetype == 'vn':
+      # vertex normal
+      pass
+    elif linetype == 'vp':
+      # parameter-space vertex (on a NURBS or something)
+      pass
+    elif linetype == 'f':
+      # face
+      pass
+    else:
+      print "Unknown linetype %s" % linetype
+      sys.exit(1)
+
+def old_convert(fin, fout, binary):
   _, _, _, _, _, _, np = obj.readline().strip().split()
   np = int(np)
   vertices=[]
