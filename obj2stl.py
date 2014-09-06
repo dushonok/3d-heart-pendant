@@ -70,12 +70,12 @@ def convert(fin, fout, binary=False):
       pass
     elif linetype == 'f':
       # face
-      
       # todo: support v/vt/vn instead of just v
-      # todo: support faces with more than 3 vertices
       
-      v1,v2,v3 = map(lambda s: vertices[int(s)-1], values[:3])
-      faces.append((v1,v2,v3))
+      vs = map(lambda s: vertices[int(s)-1], values[:3])
+      for i in range(3,len(vs)+1):
+        v1,v2,v3 = vs[i-3:i]
+        faces.append((v1,v2,v3))
     else:
       print "Unknown linetype %s" % linetype
       sys.exit(1)
