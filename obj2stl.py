@@ -7,7 +7,38 @@ def usage():
   print
   print "Convert a Wavefront .obj file into a ASCII or binary .stl file."
 
-def convert(fin, fout, binary):
+
+def write_face(fout, p1, p2, p3, binary=False):
+  x1,y1,z1 = p1
+  x2,y2,z2 = p2
+  x3,y3,z3 = p3
+  if binary:
+    fout.write(pack('<12f2x',0,0,0,x1,y1,z1,x2,y2,z2,x3,y3,z3))
+  else:
+    fout.writelin("\tfacet normal {0:e} {1:e} {2:e}".format(0, 0, 0))
+    fout.writelin("\t\tfouter loop")
+    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x1, y1, z1))
+    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x2, y2, z2))
+    fout.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x3, y3, z3))
+    fout.writelin("\t\tendloop")
+    fout.writelin("\tendfacet")
+
+def write_stl(fout, triangles, binary=False):
+  if binary:
+    fout.write(pack('<80xI',nt))
+  else:
+    fout.write("solid surface\n")
+  
+  for triangle in triangles:
+    write_face(fout, triangle, binary)
+  
+  if not binary:
+    fout.writelin("endsolid surface")
+
+
+def convert(fin, fout, binary=False):
+  name = "surface"
+  vertices = []
   for line in fin.readlines():
     # todo: strip comments
     
@@ -15,12 +46,17 @@ def convert(fin, fout, binary):
     linetype, values = values[0], values[1:]
     if linetype == 'o':
       # object name
+      if len(values) > 0:
+        name = values[0]
       pass
     elif linetype == 'g':
       # group name
+      if len(values) > 0:
+        name = values[0]
       pass
     elif linetype == 'v':
       # vertex position
+      vertices.append(values)
       pass
     elif linetype == 'vt':
       # texture coordinate
@@ -37,65 +73,6 @@ def convert(fin, fout, binary):
     else:
       print "Unknown linetype %s" % linetype
       sys.exit(1)
-
-def old_convert(fin, fout, binary):
-  _, _, _, _, _, _, np = obj.readline().strip().split()
-  np = int(np)
-  vertices=[]
-  normals=[]
-  triangles=[]
-
-  # np vertices as (x,y,z)
-  min_x, min_y, min_z = 0, 0, 0
-  for i in range(np):
-    x, y, z = map(float,obj.readline().strip().split()) 
-    min_x, min_y, min_z = min(x,min_x), min(y,min_y), min(z,min_z)
-    vertices.append((x, y, z))
-  # move object to the positive quadrant
-  for i in range(np): 
-    x,y,z = vertices[i]
-    vertices[i] = (x-min_x,y-min_y,z-min_z)
-
-  assert obj.readline().strip() == ""
-  # np normals as (x,y,z)
-  for i in range(np):
-    normals.append(tuple(map(float,obj.readline().strip().split())))
-
-  assert obj.readline().strip() == ""
-  nt=int(obj.readline().strip().split()[0]) # number of triangles
-  _, _, _, _, _ = obj.readline().strip().split()
-  assert obj.readline().strip() == ""
-  # rest of the file is a list of numbers
-  points = map(int, "".join(obj.readlines()).strip().split())
-  points = points[nt:]  # ignore these.. (whatever they are)
-  for i in range(nt): 
-    triangles.append((points.pop(0), points.pop(0), points.pop(0)))
-
-  stream = sys.stdout
-  if binary:
-    stream.write(pack('<80xI',nt))
-  else:
-    stream.write("solid surface\n")
-  for triangle in triangles: 
-    x1, y1, z1 = vertices[triangle[0]]
-    x2, y2, z2 = vertices[triangle[1]]
-    x3, y3, z3 = vertices[triangle[2]]
-    # normal = (v2 - v1)x(p3-p1)
-    # normal = (  (y2-y1)*(z3-z1)-(y3-y1)*(z2-z1), 
-    #            (z2-z1)*(x3-x1)-(x2-x1)*(z3-z1), 
-    #            (x2-x1)*(y3-y1)-(x2-x1)*(y2-y1) )
-    if binary:
-      stream.write(pack('<12f2x',0,0,0,x1,y1,z1,x2,y2,z2,x3,y3,z3))
-    else:
-      stream.writelin("\tfacet normal {0:e} {1:e} {2:e}".format(0, 0, 0))
-      stream.writelin("\t\tstreamer loop")
-      stream.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x1, y1, z1))
-      stream.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x2, y2, z2))
-      stream.writelin("\t\t\tvertex {0:e} {1:e} {2:e}".format(x3, y3, z3))
-      stream.writelin("\t\tendloop")
-      stream.writelin("\tendfacet")
-  if not binary:
-    stream.writelin("endsolid surface")
 
 
 binary = False
